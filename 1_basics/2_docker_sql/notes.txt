@@ -1,0 +1,152 @@
+
+
+
+docker run -it \
+  -e POSTGRES_USER="root" \
+  -e POSTGRES_PASSWORD="root" \
+  -e POSTGRES_DB="ny_taxi" \
+  -v $(pwd)/ny_taxi_postgres_data:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  postgres:13
+
+# sudo chown -R 999:999 /mnt/c/users/olutu/Downloads/DEng/learn/wk_1_basics/2_docker_sql/ny_taxi_postgres_data
+# sudo chmod 700 /mnt/c/users/olutu/Downloads/DEng/learn/wk_1_basics/2_docker_sql/ny_taxi_postgres_data
+#  -v /mnt/c/users/olutu/Downloads/DEng/learn/wk_1_basics/2_docker_sql/ny_taxi_postgres_data:/var/lib/postgresql/data \
+#  -v $(pwd)/ny_taxi_postgres_data:/var/lib/postgresql/data \
+#  -v /ny_taxi_postgres_data:/var/lib/postgresql/data \
+
+https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+https://www1.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf
+
+
+docker run -it \
+  -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+  -e PGADMIN_DEFAULT_PASSWORD="root" \
+  -p 8080:80 \
+  dpage/pgadmin4
+
+
+## Network 
+# below, we create a network, then use the network when building and running both docker images for postgres and pg admin so they are connected
+
+docker network create pg-network
+
+docker run -it \
+  -e POSTGRES_USER="root" \
+  -e POSTGRES_PASSWORD="root" \
+  -e POSTGRES_DB="ny_taxi" \
+  -v $(pwd)/ny_taxi_postgres_data:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  --network=pg-network \
+  --name pg-database \
+  postgres:13
+
+
+docker run -it \
+  -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+  -e PGADMIN_DEFAULT_PASSWORD="root" \
+  -p 8080:80 \
+  --network=pg-network \
+  --name pgadmin \
+  dpage/pgadmin4
+
+# run the code below in bash to use the script and the params to download the data and write it to postgres 
+# a valuable lesson about writing and scripting. any space around equal sign is taken as a character 
+URL="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet"
+
+python ingest.py \
+  --user=root \
+  --password=root \
+  --host=localhost \
+  --port=5432 \
+  --db=ny_taxi \
+  --tb=yellow_taxi_trips \
+  --url=${URL}
+
+
+# build the image based on the docker file 
+
+docker build -t taxi_ingest:v001 .
+
+# afterwards, when the image has been built 
+
+docker run -it
+  --network=pg-network \
+  taxi_ingest:v001 \
+    --user=root \
+    --password=root \
+    --host=localhost \
+    --port=5432 \
+    --db=ny_taxi \
+    --tb=yellow_taxi_trips \
+    --url=${URL}
+
+python -m http.server
+
+ipconfig
+
+# you need to build the image before running it ^&
+
+URL="http://172.22.32.1:8000/yellow_tripdata_2024-01.parquet"
+
+docker run -it \
+  --network=pg-network \
+  taxi_ingest:v001 \
+    --user=root \
+    --password=root \
+    --host=pg-database \
+    --port=5432 \
+    --db=ny_taxi \
+    --tb=yellow_taxi_trips \
+    --url=${URL}
+
+
+# use docker compose for multiple services 
+# some issues with this, and quite the hectic setup to run 
+# run docker-compose up 
+# since the network is not specified and the service name is now different, the table disappears 
+  # to get the data back into the current service - pgdatabase, and given than a new network was created, need to run the ingest step again
+    # edit the network, and the host based on the new set up
+
+
+pgcli -h localhost -p 5432 -u root -d ny_taxi
+
+
+URL="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet"
+
+docker run -it \
+  --network=2_docker_sql_default \
+  taxi_ingest:v001 \
+    --user=root \
+    --password=root \
+    --host=pgdatabase \
+    --port=5432 \
+    --db=ny_taxi \
+    --tb=yellow_taxi_trips \
+    --url=${URL}
+
+
+URL="https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv"
+
+docker run -it \
+  --network=2_docker_sql_default \
+  taxi_ingest:v001 \
+    --user=root \
+    --password=root \
+    --host=pgdatabase \
+    --port=5432 \
+    --db=ny_taxi \
+    --tb=zones \
+    --url=${URL}
+
+###### Terraform 
+
+- Infrastructure as code - define both cloud and on prem resource 
+- simplicity in keeping track - in a file ; easier collaboration ; reproducibility ; resource removal 
+- not made to deploy ; cannot change immutable resource ; not used to manage resources not defined in your terraform file
+
+* init - get the code of the providers i needd 
+* plan - what i am anbout to do 
+* apply - do what is in the .tf files 
+* destory - remove everything defined in the .tf file 
+
