@@ -21,3 +21,15 @@ ny_taxi_postgres_data;C
 *.csv
 *.parquet
 **keys
+oREADME.md
+**.ssh_tunnel
+**charts
+**custom
+**dbt 
+**extensions
+**interactions
+**utils
+**.txt
+**mage-ai-terraform-templates
+**pipelines
+**__init__.py
