@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: staging
+    database: tonal-works-431719-h7
+    schema: taxi_data
+
+    tables:
+      - name: external_yellow_tripdata
+      - name: external_green_tripdata
