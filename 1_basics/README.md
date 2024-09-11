@@ -8,6 +8,7 @@ The primary advantage is for the management of cloud service in a structured, so
 
 In this case, I've used Terraform to create a Google Cloud Storage bucket and BiqQuery Dataset. Here is an overview of the blocks in the main.tf file 
 
+
     - Terraform Provider Block 
 
     - [Google Provider Config](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket)
@@ -15,6 +16,7 @@ In this case, I've used Terraform to create a Google Cloud Storage bucket and Bi
     - Cloud Storage Bucket resource definition, including name, location,  storage class and bucket level access
 
     - BigQuery Dataset specifying the dataset name and location
+
 
 Variables.tf contains the parameters for each of the different fields to improve code consistency and readability.
 
